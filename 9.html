@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Inventario Técnico - Edición Rápida</title>
+
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<style>
+:root{--bg:#f0f2f5;--card:#fff;--accent:#0b74de;--danger:#e74c3c;--success:#27ae60}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);margin:0;padding:10px}
+.wrap{max-width:1400px;margin:auto}
+.card{background:white;border-radius:10px;padding:20px;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin-bottom:20px}
+
+.lote-header{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.seccion-titulo{grid-column:1/-1;background:#34495e;color:white;padding:5px 10px;border-radius:4px;font-weight:bold;margin-top:15px;font-size:12px}
+
+.pieza-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;background:#f8f9fa;padding:15px;border-radius:8px;border:1px solid #dee2e6}
+
+.pieza-item{display:flex;flex-direction:column;background:white;padding:8px;border-radius:6px;border:1px solid #eee;font-size:12px}
+.pieza-item div{display:flex;align-items:center;gap:5px;margin-bottom:5px}
+
+input,textarea{padding:8px;border:1px solid #cbd5e0;border-radius:6px;width:100%;box-sizing:border-box}
+
+table{width:100%;border-collapse:collapse;margin-top:15px;background:white}
+th,td{padding:10px;border-bottom:1px solid #edf2f7;font-size:13px}
+th{background:#f1f5f9}
+
+.low-stock{border-left:5px solid var(--danger);background:#fff5f5}
+
+button{cursor:pointer;padding:8px 12px;border:none;border-radius:6px;font-weight:600}
+
+.btn-save{background:var(--accent);color:white;width:100%;padding:12px;font-size:16px}
+
+.stk-btn{background:#edf2f7;padding:2px 8px;border:1px solid #cbd5e0}
+
+.ubi-badge{color:var(--accent);font-weight:bold;background:#e1effe;padding:3px 6px;border-radius:4px;font-size:11px}
+
+.nota-input{width:100%;border:1px solid transparent;background:#f9f9f9;font-size:11px;padding:4px;border-radius:3px}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div class="card">
+
+<h3 style="margin-top:0;color:var(--accent)">📥 Nueva Carga de Repuestos</h3>
+
+<div class="lote-header">
+<div><label>Modelo</label><input id="l_mod"></div>
+<div><label>Proveedor</label><input id="l_prov"></div>
+<div><label>Ubicación</label><input id="l_ubi"></div>
+<div><label>Costo</label><input type="number" id="l_pc"></div>
+<div><label>Venta</label><input type="number" id="l_pv"></div>
+</div>
+
+<div class="pieza-grid">
+
+<div class="seccion-titulo">PANTALLAS</div>
+<div class="pieza-item"><div><input type="checkbox" value="Pantalla">Pantalla</div><input type="number" class="q"></div>
+
+<div class="seccion-titulo">CARGA Y ENERGÍA</div>
+<div class="pieza-item"><div><input type="checkbox" value="Batería">Batería</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="Placa Carga">SUB PLACA</div><input type="number" class="q"></div>
+
+<div class="seccion-titulo">CÁMARAS</div>
+<div class="pieza-item"><div><input type="checkbox" value="Cámara Trasera">Trasera</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="Cámara Frontal">Frontal</div><input type="number" class="q"></div>
+
+<div class="seccion-titulo">OTROS</div>
+<div class="pieza-item"><div><input type="checkbox" value="Altavoz">Altavoz</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="Auricular">Auricular</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="Placa Madre">Placa Principal </div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="Botones Fisicos">Botones Fisicos</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="Botones FLEX">Botones FLEX</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="TAPA">TAPA</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="MARCO">MARCO</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="HUELLA">HUELLA</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="NFC">NFC</div><input type="number" class="q"></div>
+<div class="pieza-item"><div><input type="checkbox" value="Antena">Antena</div><input type="number" class="q"></div>
+
+</div>
+
+<button class="btn-save" onclick="guardarTodo()">📥 GUARDAR REPUESTOS</button>
+
+</div>
+
+<div class="card">
+
+<input id="buscador" style="font-size:16px;padding:12px" placeholder="Buscar..." oninput="renderTable()">
+
+<div style="overflow-x:auto">
+
+<table id="tablaRepuestos">
+
+<thead>
+<tr>
+<th>Repuesto</th>
+<th>Modelo</th>
+<th>Stock</th>
+<th>Ubicación</th>
+<th>Venta</th>
+<th>Ganancia</th>
+<th>Acción</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+<button onclick="exportXLSX()" style="background:var(--success);color:white;margin-top:15px">📊 Excel</button>
+
+</div>
+
+</div>
+
+<script>
+
+const STORAGE_KEY="inventario_repuestos_v1"
+let items=JSON.parse(localStorage.getItem(STORAGE_KEY))||[]
+
+function save(){
+localStorage.setItem(STORAGE_KEY,JSON.stringify(items))
+}
+
+function renderTable(){
+
+const tbody=document.querySelector("#tablaRepuestos tbody")
+const query=document.getElementById("buscador").value.toLowerCase()
+
+tbody.innerHTML=""
+
+let filtrados=items.filter(it=>
+(it.nombre+" "+it.modelos+" "+(it.ubicacion||"")).toLowerCase().includes(query)
+)
+
+filtrados.sort((a,b)=>a.modelos.localeCompare(b.modelos))
+
+filtrados.forEach(it=>{
+
+const tr=document.createElement("tr")
+
+if(it.stock_actual<=1) tr.className="low-stock"
+
+let ganancia=(it.precio_venta-it.precio_costo)||0
+
+tr.innerHTML=`
+
+<td>
+<b>${it.nombre}</b>
+<br>
+<textarea class="nota-input" onchange="actualizarNota(${it.id},this.value)">${it.notas||""}</textarea>
+</td>
+
+<td><b>${it.modelos}</b></td>
+
+
+
+<td>
+<button class="stk-btn" onclick="cambiarStock(${it.id},-1)">-</button>
+<b>${it.stock_actual}</b>
+<button class="stk-btn" onclick="cambiarStock(${it.id},1)">+</button>
+</td>
+
+<td><span class="ubi-badge">${it.ubicacion||"S/U"}</span></td>
+
+<td>$${it.precio_venta||0}</td>
+
+<td style="color:green;font-weight:bold">$${ganancia}</td>
+
+<td>
+<button onclick="eliminar(${it.id})" style="color:red">🗑</button>
+</td>
+
+`
+
+tbody.appendChild(tr)
+
+})
+
+}
+
+function actualizarNota(id,texto){
+
+let it=items.find(x=>x.id==id)
+
+if(it){
+it.notas=texto
+save()
+}
+
+}
+
+function guardarTodo(){
+
+const mod=document.getElementById("l_mod").value.trim().toUpperCase()
+const ubi=document.getElementById("l_ubi").value.trim()
+
+if(!mod){
+alert("Falta modelo")
+return
+}
+
+document.querySelectorAll(".pieza-item").forEach(div=>{
+
+const chk=div.querySelector("input[type='checkbox']")
+const qty=parseInt(div.querySelector(".q").value)
+
+if(chk.checked && qty>0){
+
+let existente=items.find(x=>
+x.nombre===chk.value &&
+x.modelos===mod &&
+x.ubicacion===ubi
+)
+
+if(existente){
+
+existente.stock_actual+=qty
+
+}else{
+
+items.push({
+
+id:Date.now()+Math.random(),
+nombre:chk.value,
+modelos:mod,
+ubicacion:ubi,
+precio_costo:parseFloat(document.getElementById("l_pc").value)||0,
+precio_venta:parseFloat(document.getElementById("l_pv").value)||0,
+stock_actual:qty,
+notas:""
+
+})
+
+}
+
+}
+
+})
+
+save()
+
+if (items.length === 0) {
+  items.push({
+    id: Date.now(),
+    nombre: "Pantalla",
+    modelos: "iPhone X",
+    ubicacion: "Almacén 1",
+    precio_costo: 50,
+    precio_venta: 80,
+    stock_actual: 5,
+    notas: ""
+  });
+}
+
+renderTable()
+
+document.querySelectorAll("input[type='checkbox']").forEach(c=>c.checked=false)
+document.querySelectorAll(".q").forEach(q=>q.value="")
+
+document.getElementById("l_mod").value=""
+document.getElementById("l_prov").value=""
+document.getElementById("l_ubi").value=""
+document.getElementById("l_pc").value=""
+document.getElementById("l_pv").value=""
+
+}
+
+function cambiarStock(id,val){
+
+let it=items.find(x=>x.id==id)
+
+if(it){
+it.stock_actual=Math.max(0,it.stock_actual+val)
+save()
+renderTable()
+}
+
+}
+
+function eliminar(id){
+
+if(confirm("Eliminar repuesto?")){
+
+items=items.filter(x=>x.id!==id)
+save()
+renderTable()
+
+}
+
+}
+
+function exportXLSX(){
+
+const ws=XLSX.utils.json_to_sheet(items)
+
+const wb=XLSX.utils.book_new()
+
+XLSX.utils.book_append_sheet(wb,ws,"Inventario")
+
+XLSX.writeFile(wb,"Inventario_Repuestos.xlsx")
+
+}
+
+renderTable()
+
+</script>
+
+</body>
+</html>
